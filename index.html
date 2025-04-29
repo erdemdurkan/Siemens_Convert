@@ -139,7 +139,7 @@
 
                 const yeniWorkbook = XLSX.utils.book_new();
                 const yeniSheet = XLSX.utils.aoa_to_sheet(yeniVeriler);
-                XLSX.utils.book_append_sheet(yeniWorkbook, yeniSheet, "Q1");
+                XLSX.utils.book_append_sheet(yeniWorkbook, yeniSheet, "q1");
 
                 const dosyaAdi = rows[0][1] ? rows[0][1].toString().replace(/[\/\:\*\?\"<>\|]/g, '') : 'siemens_donusturulmus';
                 XLSX.writeFile(yeniWorkbook, `${dosyaAdi}.xlsx`);
