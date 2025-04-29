@@ -123,15 +123,15 @@
           const satirAnahtari = yeniSatir.join('-');
 
           if (!satirSet.has(satirAnahtari)) {
-            // B ve D yer değiştiriyoruz
-            yeniVeriler.push([yeniSatir[0], yeniSatir[3], yeniSatir[2], yeniSatir[1]]);
+            // A, C, D, B sırasına göre ekle (B-D-C → C-D-B)
+            yeniVeriler.push([yeniSatir[0], yeniSatir[2], yeniSatir[3], yeniSatir[1]]);
             satirSet.add(satirAnahtari);
           }
         }
 
         const yeniWorkbook = XLSX.utils.book_new();
         const yeniSheet = XLSX.utils.aoa_to_sheet(yeniVeriler);
-        XLSX.utils.book_append_sheet(yeniWorkbook, yeniSheet, "q1");
+        XLSX.utils.book_append_sheet(yeniWorkbook, yeniSheet, "Q1");
 
         const dosyaAdi = rows[0][1] ? rows[0][1].toString().replace(/[\\/\\:\\*\\?\\"<>\\|]/g, '') : 'siemens_donusturulmus';
         XLSX.writeFile(yeniWorkbook, `${dosyaAdi}.xlsx`);
@@ -166,8 +166,8 @@
           if (kontrol.includes('part') || kontrol.includes('slot') || kontrol.includes('machine') || isSayisal) continue;
           if (!kontrol.startsWith('npm')) continue;
 
-          // B ve D yer değiştiriyoruz
-          yeniVeriler.push([recipeText, d, c, b]);
+          // A, C, D, B sırasına göre Panasonic satırı oluştur
+          yeniVeriler.push([recipeText, c, d, b]);
         }
 
         const yeniWorkbook = XLSX.utils.book_new();
