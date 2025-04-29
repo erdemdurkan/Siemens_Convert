@@ -1,0 +1,91 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Excel Düzenleyici</title>
+</head>
+<body>
+    <h1>Excel Dosyası Düzenleyici</h1>
+
+    <input type="file" id="inputExcel" accept=".xlsx, .xls">
+    <button id="convertBtn">Convert</button>
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script>
+        document.getElementById('convertBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('inputExcel');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('Lütfen bir Excel dosyası seçin!');
+                return;
+            }
+
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            const yeniVeriler = [];
+            const satirSet = new Set();
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+
+                const eskiB = row[1] || '';
+                const eskiAC = row[28] || '';
+                const f = row[5] || '';
+                const h = row[7] || '';
+                const u = row[20] || '';
+                const ab = row[27] || '';
+
+                const cYeni = `SME${f}${h}`;
+
+                let dYeni = '';
+
+                if (ab == 1) {
+                    dYeni = '100';
+                } else if (ab == 2) {
+                    dYeni = '200';
+                } else {
+                    dYeni = '';
+                }
+
+                const sadeceRakam = (deger) => {
+                    if (typeof deger === 'number') return deger.toString();
+                    if (typeof deger === 'string') return deger.replace(/\D/g, '');
+                    return '';
+                };
+
+                let uRakam = sadeceRakam(u);
+                let abRakam = sadeceRakam(ab);
+
+                if (uRakam.length === 1) {
+                    uRakam = '0' + uRakam;
+                }
+
+                dYeni += uRakam + abRakam;
+
+                const yeniSatir = [eskiB, eskiAC, cYeni, dYeni];
+
+                const satirAnahtari = yeniSatir.join('-');
+                if (!satirSet.has(satirAnahtari)) {
+                    yeniVeriler.push(yeniSatir);
+                    satirSet.add(satirAnahtari);
+                }
+            }
+
+            const yeniWorkbook = XLSX.utils.book_new();
+            const yeniSheet = XLSX.utils.aoa_to_sheet(yeniVeriler);
+            XLSX.utils.book_append_sheet(yeniWorkbook, yeniSheet, "Q1");
+
+            const dosyaAdi = rows[0][1] ? rows[0][1].toString().replace(/[\/\\:\*\?"<>\|]/g, '') : 'yeni_dosya';
+
+            XLSX.writeFile(yeniWorkbook, `${dosyaAdi}.xlsx`);
+        });
+    </script>
+</body>
+</html>
