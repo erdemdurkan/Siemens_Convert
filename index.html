@@ -1,181 +1,219 @@
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Excel Dönüştürücü</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Excel Dönüştürücü - OD0 + OD5 + NPM</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
       background: linear-gradient(to right, #74ebd5, #ACB6E5);
+      height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: sans-serif;
+      margin: 0;
     }
     .container {
       background: white;
-      padding: 30px 20px;
+      padding: 30px;
       border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-      text-align: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
       width: 90%;
-      max-width: 480px;
+      max-width: 550px;
+      text-align: center;
     }
     h1 {
       margin-bottom: 20px;
-      font-size: 24px;
-      color: #333;
     }
     input[type="file"] {
-      margin-bottom: 15px;
       width: 100%;
+      margin-bottom: 15px;
     }
     button {
+      padding: 10px 20px;
       background-color: #4CAF50;
-      border: none;
       color: white;
-      padding: 15px 20px;
-      text-align: center;
-      font-size: 16px;
-      border-radius: 10px;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
-      width: 100%;
-      transition: background-color 0.3s;
+      font-size: 16px;
     }
     button:hover {
       background-color: #45a049;
     }
-    .file-label {
+    label {
+      display: block;
       font-weight: bold;
       margin-top: 10px;
-      margin-bottom: 5px;
-      display: block;
-      color: #555;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Excel Dönüştürücü</h1>
-
-    <label class="file-label">Siemens Dosyası Seç:</label>
-    <input type="file" id="inputSiemens" accept=".xlsx, .xls">
-
-    <label class="file-label">Panasonic NPM Dosyası Seç:</label>
-    <input type="file" id="inputPanasonic" accept=".xlsx, .csv">
-
-    <button id="convertBtn">Convert</button>
+    <label>OD0 Dosyası Seç (.xlsx):</label>
+    <input type="file" id="inputOD0" accept=".xlsx" />
+    <label>OD5 Dosyası Seç (.xlsx):</label>
+    <input type="file" id="inputOD5" accept=".xlsx" />
+    <label>NPM Dosyası Seç (.xlsx/.csv):</label>
+    <input type="file" id="inputNPM" accept=".xlsx, .csv" />
+    <button onclick="convert()">Convert</button>
   </div>
 
   <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
   <script>
-    document.getElementById('convertBtn').addEventListener('click', async () => {
-      const siemensFile = document.getElementById('inputSiemens').files[0];
-      const panasonicFile = document.getElementById('inputPanasonic').files[0];
+    async function convert() {
+      const fileOD0 = document.getElementById("inputOD0").files[0];
+      const fileOD5 = document.getElementById("inputOD5").files[0];
+      const fileNPM = document.getElementById("inputNPM").files[0];
 
-      if (!siemensFile && !panasonicFile) {
-        alert('Lütfen en az bir dosya seçin!');
-        return;
-      }
+      const sadeceRakam = (v) => typeof v === "number" ? v.toString() : (v || "").replace(/\D/g, "");
 
-      if (siemensFile) {
-        const data = await siemensFile.arrayBuffer();
+      // OD0 işle
+      if (fileOD0) {
+        const data = await fileOD0.arrayBuffer();
         const workbook = XLSX.read(data);
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
         const yeniVeriler = [];
-        const satirSet = new Set();
+        const fileName = "OD0_" + (rows[1][1] || "output");
 
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
+          const f = row[5];
+          const ab = row[27];
+          const u = row[20];
+          const h = row[7];
+          const ac = row[28];
+          const v = row[21];
 
-          const eskiB = row[1] || '';
-          const eskiAC = row[28] || '';
-          const f = row[5] || '';
-          const h = row[7] || '';
-          const u = row[20] || '';
-          const ab = row[27] || '';
+          if (!ac || ab === undefined || ab === null || ab === "") continue;
+          if ((v || "").toString().trim() === "WPC 6") continue;
 
-          const cYeni = `SME${f}${h}`;
+          const A = fileName;
+          const B = "SME" + (f || "") + (ab || "");
 
-          let dYeni = '';
-          if (ab == 1) dYeni = '100';
-          else if (ab == 2) dYeni = '200';
-          else dYeni = '';
-
-          const sadeceRakam = (deger) => {
-            if (typeof deger === 'number') return deger.toString();
-            if (typeof deger === 'string') return deger.replace(/\\D/g, '');
-            return '';
-          };
-
+          let C = ab == 1 ? "100" : ab == 2 ? "200" : "";
           let uRakam = sadeceRakam(u);
-          let abRakam = sadeceRakam(ab);
-          if (uRakam.length === 1) uRakam = '0' + uRakam;
+          if (uRakam.length === 1) uRakam = "0" + uRakam;
+          C += uRakam + (h || "");
+          const D = ac.toString();
 
-          dYeni += uRakam + abRakam;
-
-          const yeniSatir = [eskiB, eskiAC, cYeni, dYeni];
-          const satirAnahtari = yeniSatir.join('-');
-
-          if (!satirSet.has(satirAnahtari)) {
-            // A, C, D, B sırasına göre ekle (B-D-C → C-D-B)
-            yeniVeriler.push([yeniSatir[0], yeniSatir[2], yeniSatir[3], yeniSatir[1]]);
-            satirSet.add(satirAnahtari);
-          }
+          yeniVeriler.push([A, B, C, D]);
         }
 
-        const yeniWorkbook = XLSX.utils.book_new();
-        const yeniSheet = XLSX.utils.aoa_to_sheet(yeniVeriler);
-        XLSX.utils.book_append_sheet(yeniWorkbook, yeniSheet, "Q1");
-
-        const dosyaAdi = rows[0][1] ? rows[0][1].toString().replace(/[\\/\\:\\*\\?\\"<>\\|]/g, '') : 'siemens_donusturulmus';
-        XLSX.writeFile(yeniWorkbook, `${dosyaAdi}.xlsx`);
+        if (yeniVeriler.length) {
+          const wbNew = XLSX.utils.book_new();
+          const ws = XLSX.utils.aoa_to_sheet(yeniVeriler);
+          XLSX.utils.book_append_sheet(wbNew, ws, "q1");
+          XLSX.writeFile(wbNew, `${yeniVeriler[0][0]}.xlsx`);
+        } else {
+          alert("OD0 dosyasında dönüştürülecek veri bulunamadı.");
+        }
       }
 
-      if (panasonicFile) {
-        const data = await panasonicFile.arrayBuffer();
-        const workbook = XLSX.read(data, { type: 'array', raw: true });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      // OD5 işle
+      if (fileOD5) {
+        const data = await fileOD5.arrayBuffer();
+        const wb = XLSX.read(data);
+        const sheet = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-        if (rows.length === 0 || !rows[0][0]) {
-          alert('Dosya geçersiz veya A1 boş.');
+        const fileName = "OD5_" + (rows[1][1] || "output");
+        const yeniVeriler = [];
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          const f = row[5];
+          const h = row[7];
+          const s = row[18];
+          const v = row[21];
+          const w = row[22];
+
+          const t = row[19]; if (!h || !s || !v || !w || !(t || "").toString().trim().endsWith("X")) continue;
+
+          const A = fileName;
+          const B = "SME" + (f || "") + (h || "");
+          let sStr = s.toString().length === 1 ? "0" + s : s.toString(); let C = (h == 1 ? "100" : h == 2 ? "200" : h ? h + "00" : "") + sStr + v;
+          const D = w;
+
+          yeniVeriler.push([A, B, C, D]);
+        }
+
+        if (yeniVeriler.length) {
+          const wbNew = XLSX.utils.book_new();
+          const ws = XLSX.utils.aoa_to_sheet(yeniVeriler);
+          XLSX.utils.book_append_sheet(wbNew, ws, "q1");
+          XLSX.writeFile(wbNew, `${yeniVeriler[0][0]}.xlsx`);
+        } else {
+          alert("OD5 dosyasında dönüştürülecek veri bulunamadı.");
+        }
+      }
+
+      // NPM işle
+      if (fileNPM) {
+        const data = await fileNPM.arrayBuffer();
+        const wb = XLSX.read(data, { type: "array", raw: true });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        if (!rows.length || !rows[0][0]) {
+          alert("NPM dosyasında geçerli Recipe bilgisi yok.");
           return;
         }
 
-        const recipeText = rows[0][0].toString().replace('Recipe:', '').trim();
+        const recipeText = rows[0][0].toString().replace("Recipe:", "").trim();
         const yeniVeriler = [];
 
         for (let i = 1; i < rows.length; i++) {
           const row = rows[i];
           if (!row[5] || !row[1]) continue;
-
           const b = row[5].toString();
-          const cHam = row[1].toString() + row[2].toString();
-          const c = cHam.replace(/["\\-]/g, '');
-          const d = (row[3] || '').toString() + (row[4] || '').toString();
+          const c = (row[1].toString() + row[2].toString()).replace(/["\-]/g, "");
+          const d = (row[3] || "").toString() + (row[4] || "").toString();
 
           const kontrol = row[1].toString().toLowerCase();
-          const isSayisal = /^[0-9.\\s]+$/.test(row[1]);
+          if (
+            kontrol.includes("part") ||
+            kontrol.includes("slot") ||
+            kontrol.includes("machine") ||
+            /^[0-9.\s]+$/.test(kontrol) ||
+            !kontrol.startsWith("npm")
+          ) continue;
 
-          if (kontrol.includes('part') || kontrol.includes('slot') || kontrol.includes('machine') || isSayisal) continue;
-          if (!kontrol.startsWith('npm')) continue;
+          
+    const npmLine = row;
+    const partcode = npmLine[5];
+    const npmid = (npmLine[1] || "").toString().replace("NPM-", "NPM") + (npmLine[2] || "");
+    const direction = (npmLine[4] || "").toString().trim(); const mount = (npmLine[3] || "").toString() + (direction || "L");
+    const matcode = (npmLine[5] || "").toString();
 
-          // A, C, D, B sırasına göre Panasonic satırı oluştur
-          yeniVeriler.push([recipeText, c, d, b]);
+    if (
+      recipeText && !mount.startsWith("101") &&
+      npmid.toLowerCase().startsWith("npm") &&
+      mount &&
+      matcode &&
+      !["part", "slot", "machine"].some(k => npmid.toLowerCase().includes(k)) &&
+      /^[0-9]/.test(mount)
+    ) {
+      yeniVeriler.push([recipeText, npmid, mount, partcode]);
+    }
+    
         }
 
-        const yeniWorkbook = XLSX.utils.book_new();
-        const yeniSheet = XLSX.utils.aoa_to_sheet(yeniVeriler);
-        XLSX.utils.book_append_sheet(yeniWorkbook, yeniSheet, "q1");
-        XLSX.writeFile(yeniWorkbook, `${recipeText}.xlsx`);
+        if (yeniVeriler.length) {
+          const wbNew = XLSX.utils.book_new();
+          const ws = XLSX.utils.aoa_to_sheet(yeniVeriler);
+          XLSX.utils.book_append_sheet(wbNew, ws, "q1");
+          XLSX.writeFile(wbNew, `${recipeText}.xlsx`);
+        } else {
+          alert("NPM dosyasında uygun veri bulunamadı.");
+        }
       }
-    });
+    }
   </script>
 </body>
 </html>
