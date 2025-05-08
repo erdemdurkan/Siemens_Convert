@@ -91,7 +91,7 @@
           yeniVeriler.push([A, B, C, D]);
         }
 
-        if (yeniVeriler.length) saveAsXLT(yeniVeriler, fileName);
+        if (yeniVeriler.length) saveAsXLS(yeniVeriler, fileName);
         else alert("OD0 için dönüştürülecek veri bulunamadı.");
       }
 
@@ -114,7 +114,7 @@
           yeniVeriler.push([A, B, C, D]);
         }
 
-        if (yeniVeriler.length) saveAsXLT(yeniVeriler, fileName);
+        if (yeniVeriler.length) saveAsXLS(yeniVeriler, fileName);
         else alert("OD5 için dönüştürülecek veri bulunamadı.");
       }
 
@@ -147,21 +147,21 @@
           }
         }
 
-        if (yeniVeriler.length) saveAsXLT(yeniVeriler, recipeText);
+        if (yeniVeriler.length) saveAsXLS(yeniVeriler, recipeText);
         else alert("NPM için dönüştürülecek veri bulunamadı.");
       }
     }
 
-    function saveAsXLT(dataArray, filename) {
+    function saveAsXLS(dataArray, filename) {
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(dataArray);
       XLSX.utils.book_append_sheet(wb, ws, "q1");
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const wbout = XLSX.write(wb, { bookType: 'xls', type: 'array' });
       const blob = new Blob([wbout], { type: 'application/octet-stream' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename + ".xlt";
+      a.download = filename + ".xls";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
